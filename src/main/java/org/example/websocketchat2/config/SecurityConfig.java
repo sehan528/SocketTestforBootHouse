@@ -11,31 +11,50 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
 
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//        http
+//                .authorizeHttpRequests(authorize -> authorize
+//                        .requestMatchers("/userregform", "/userreg", "/css/**", "/js/**").permitAll()
+//                        .requestMatchers("/chat", "/chat/**", "/ws/**").authenticated()
+//                        .anyRequest().authenticated()
+//                )
+//                .formLogin(Customizer.withDefaults())
+//                .userDetailsService(customUserDetailsService)
+//                .csrf(csrf -> csrf.disable());
+//
+//        return http.build();
+//    }
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http)throws Exception{
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                                .requestMatchers("/userregform","/userreg","/css/**","/js/**").permitAll()
-//                        .requestMatchers("/ws","/chat").permitAll()
-                                .anyRequest().authenticated()
+                        .requestMatchers("/userregform", "/userreg", "/css/**", "/js/**").permitAll()
+                        .anyRequest().authenticated()
                 )
-                .formLogin(Customizer.withDefaults())
+                .formLogin(form -> form
+                        .loginPage("/loginform")
+                        .loginProcessingUrl("/login")
+                        .defaultSuccessUrl("/welcome", true)
+                        .failureUrl("/loginerror")
+                        .permitAll()
+                )
                 .userDetailsService(customUserDetailsService)
                 .csrf(csrf -> csrf.disable());
-
 
         return http.build();
     }
 
+
     @Bean
-    public PasswordEncoder passWordEncoder(){
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }

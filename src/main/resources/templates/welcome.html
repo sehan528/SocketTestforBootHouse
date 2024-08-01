@@ -1,10 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Welcome</title>
 </head>
 <body>
+<h1>Welcome, <span th:text="${#authentication.name}"></span>!</h1>
 
+<h2>Recent Chats</h2>
+<ul>
+    <li th:each="chat : ${recentChats}">
+        <a th:href="@{'/chat/' + ${chat.chatroom.id}}" th:text="${chat.chatroom.name}"></a>
+    </li>
+</ul>
+
+<h2>Start New Chat</h2>
+<form action="/startChat" method="post">
+    <input type="text" name="targetName" placeholder="Enter user name">
+    <button type="submit">Start Chat</button>
+</form>
+
+<p th:if="${error}" th:text="${error}" style="color: red;"></p>
 </body>
 </html>

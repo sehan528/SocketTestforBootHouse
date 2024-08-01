@@ -1,27 +1,23 @@
 package org.example.websocketchat2.config;
 
-import org.example.websocketchat2.websocket.CustomHandshakeInterceptor;
-import org.example.websocketchat2.websocket.MyWebSocketHandler;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.socket.config.annotation.EnableWebSocket;
-import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
-import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.web.socket.config.annotation.*;
+
 @Configuration
-@EnableWebSocket
-public class WebSocketConfig implements WebSocketConfigurer {
-    private final CustomHandshakeInterceptor customHandshakeInterceptor;
-    public WebSocketConfig(CustomHandshakeInterceptor customHandshakeInterceptor) {
-        this.customHandshakeInterceptor = customHandshakeInterceptor;
-    }
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
     @Override
-    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(myWebSocketHandler(), "/ws")
-                .setAllowedOrigins("*")
-                .addInterceptors(customHandshakeInterceptor);
+    public void configureMessageBroker(MessageBrokerRegistry config) {
+        config.enableSimpleBroker("/topic");
+        config.setApplicationDestinationPrefixes("/app");
     }
-    @Bean
-    public MyWebSocketHandler myWebSocketHandler() {
-        return new MyWebSocketHandler();
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/ws")
+                .setAllowedOrigins("*")
+                .withSockJS();
     }
 }

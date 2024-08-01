@@ -18,3 +18,6 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
