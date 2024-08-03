@@ -3,8 +3,10 @@ package org.example.websocketchat2.repository;
 import org.example.websocketchat2.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository extends JpaRepository<UserEntity, Long> {
-    UserEntity findByEmail(String email);
-    UserEntity findByName(String name);
+import java.util.Optional;
 
+public interface UserRepository extends JpaRepository<UserEntity, Long> {
+    Optional<UserEntity> findByEmail(String email);
+    Optional<UserEntity> findByName(String name);
+    boolean existsByName(String name);
 }

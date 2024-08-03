@@ -1,6 +1,7 @@
 package org.example.websocketchat2.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.websocketchat2.dto.ChatMessage;
 import org.example.websocketchat2.entity.ChatListEntity;
 import org.example.websocketchat2.entity.ChatroomEntity;
 import org.example.websocketchat2.entity.MessageEntity;
@@ -17,7 +18,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-
 public class ChatService {
     private final ChatListRepository chatListRepository;
     private final ChatroomRepository chatroomRepository;
@@ -25,7 +25,8 @@ public class ChatService {
     private final UserRepository userRepository;
 
     public List<ChatListEntity> getChatList(String email) {
-        UserEntity user = userRepository.findByEmail(email);
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         return chatListRepository.findByUser(user);
     }
 
@@ -34,15 +35,18 @@ public class ChatService {
                 .orElseThrow(() -> new RuntimeException("Chatroom not found"));
     }
 
-    public boolean hasAccess(String email, ChatroomEntity chatroom) {
-        UserEntity user = userRepository.findByEmail(email);
-        return chatListRepository.existsByUserAndChatroom(user, chatroom);
+    public boolean hasAccess(String username, ChatroomEntity chatroom) {
+        UserEntity user = userRepository.findByName(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return chatroom.getUsers().contains(user);
     }
 
     @Transactional
     public ChatroomEntity createChatroom(String email1, String email2) {
-        UserEntity user1 = userRepository.findByEmail(email1);
-        UserEntity user2 = userRepository.findByEmail(email2);
+        UserEntity user1 = userRepository.findByEmail(email1)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        UserEntity user2 = userRepository.findByEmail(email2)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         ChatroomEntity chatroom = ChatroomEntity.builder()
                 .name(user1.getName() + ", " + user2.getName())
@@ -63,17 +67,19 @@ public class ChatService {
     }
 
     @Transactional
-    public MessageEntity saveMessage(Long chatroomId, String senderEmail, String content) {
-        ChatroomEntity chatroom = getChatroom(chatroomId);
-        UserEntity sender = userRepository.findByEmail(senderEmail);
+    public MessageEntity saveMessage(ChatMessage chatMessage) {
+        ChatroomEntity chatroom = chatroomRepository.findById(chatMessage.getChatroomId())
+                .orElseThrow(() -> new RuntimeException("Chatroom not found"));
+        UserEntity sender = userRepository.findByName(chatMessage.getSender())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        MessageEntity message = MessageEntity.builder()
+        MessageEntity messageEntity = MessageEntity.builder()
                 .chatroom(chatroom)
                 .sender(sender)
-                .message(content)
+                .message(chatMessage.getMessage())
                 .build();
 
-        return messageRepository.save(message);
+        return messageRepository.save(messageEntity);
     }
 
     public List<MessageEntity> getChatroomMessages(Long chatroomId) {
@@ -81,15 +87,18 @@ public class ChatService {
         return messageRepository.findByChatroomOrderByIdAsc(chatroom);
     }
 
-    public List<ChatListEntity> getRecentChats(String name) {
-        UserEntity user = userRepository.findByName(name);
+    public List<ChatListEntity> getRecentChats(String username) {
+        UserEntity user = userRepository.findByName(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         return chatListRepository.findByUserOrderByIdDesc(user);
     }
 
     @Transactional
     public Long getOrCreateChatroom(String name1, String name2) {
-        UserEntity user1 = userRepository.findByName(name1);
-        UserEntity user2 = userRepository.findByName(name2);
+        UserEntity user1 = userRepository.findByName(name1)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        UserEntity user2 = userRepository.findByName(name2)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         return chatroomRepository.findByUsersContainingAndUsersContaining(user1, user2)
                 .map(ChatroomEntity::getId)
@@ -97,8 +106,8 @@ public class ChatService {
                     ChatroomEntity newChatroom = ChatroomEntity.builder()
                             .name(name1 + ", " + name2)
                             .build();
-                    newChatroom.getUsers().add(user1);
-                    newChatroom.getUsers().add(user2);
+                    newChatroom.addUser(user1);
+                    newChatroom.addUser(user2);
                     chatroomRepository.save(newChatroom);
 
                     ChatListEntity chatList1 = ChatListEntity.builder()
@@ -114,5 +123,4 @@ public class ChatService {
                     return newChatroom.getId();
                 });
     }
-
 }

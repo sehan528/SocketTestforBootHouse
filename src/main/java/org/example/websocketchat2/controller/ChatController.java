@@ -3,6 +3,7 @@ package org.example.websocketchat2.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.websocketchat2.entity.ChatListEntity;
 import org.example.websocketchat2.entity.ChatroomEntity;
+import org.example.websocketchat2.entity.MessageEntity;
 import org.example.websocketchat2.service.ChatService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,9 +29,12 @@ public class ChatController {
     public String chatRoom(@PathVariable Long id, Model model, @AuthenticationPrincipal UserDetails userDetails) {
         ChatroomEntity chatroom = chatService.getChatroom(id);
         if (!chatService.hasAccess(userDetails.getUsername(), chatroom)) {
-            return "redirect:/chat";
+            return "redirect:/welcome";
         }
+        List<MessageEntity> messages = chatService.getChatroomMessages(id);
         model.addAttribute("chatroom", chatroom);
+        model.addAttribute("messages", messages);
+        model.addAttribute("username", userDetails.getUsername());
         return "chatroom";
     }
 

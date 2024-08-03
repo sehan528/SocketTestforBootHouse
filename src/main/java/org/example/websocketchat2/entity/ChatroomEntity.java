@@ -26,6 +26,15 @@ public class ChatroomEntity {
             joinColumns = @JoinColumn(name = "chatroom_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
+    @Builder.Default
     private Set<UserEntity> users = new HashSet<>();
+
+    // users 컬렉션을 조작하는 메서드 추가
+    public void addUser(UserEntity user) {
+        if (this.users == null) {
+            this.users = new HashSet<>();
+        }
+        this.users.add(user);
+    }
 
 }

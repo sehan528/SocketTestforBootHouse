@@ -23,9 +23,10 @@ public class WelcomeController {
     private final UserService userService;
 
     @GetMapping("/welcome")
-    public String welcome(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+    public String welcome(Model model, @AuthenticationPrincipal UserDetails userDetails) {
         List<ChatListEntity> recentChats = chatService.getRecentChats(userDetails.getUsername());
         model.addAttribute("recentChats", recentChats);
+        model.addAttribute("username", userDetails.getUsername());
         return "welcome";
     }
 
@@ -33,12 +34,14 @@ public class WelcomeController {
     public String startChat(@AuthenticationPrincipal UserDetails userDetails,
                             @RequestParam String targetName,
                             Model model) {
-        UserEntity targetUser = userService.findByName(targetName);
-        if (targetUser == null) {
-            model.addAttribute("error", "유효하지 않은 아이디입니다.");
-            return "welcome";
-        }
-        Long chatroomId = chatService.getOrCreateChatroom(userDetails.getUsername(), targetName);
-        return "redirect:/chat/" + chatroomId;
+        return userService.findByName(targetName)
+                .map(targetUser -> {
+                    Long chatroomId = chatService.getOrCreateChatroom(userDetails.getUsername(), targetName);
+                    return "redirect:/chat/" + chatroomId;
+                })
+                .orElseGet(() -> {
+                    model.addAttribute("error", "유효하지 않은 아이디입니다.");
+                    return "welcome";
+                });
     }
 }

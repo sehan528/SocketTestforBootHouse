@@ -7,6 +7,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -19,21 +21,17 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public boolean existsByName(String name) {
+        return userRepository.existsByName(name);
+    }
+
     @Transactional(readOnly = true)
-    public UserEntity findByName(String name) {
+    public Optional<UserEntity> findByName(String name) {
         return userRepository.findByName(name);
     }
 
     @Transactional(readOnly = true)
-    public boolean emailExists(String email) {
-        return userRepository.findByEmail(email) != null;
+    public Optional<UserEntity> findByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
-
-    @Transactional(readOnly = true)
-    public boolean nameExists(String name) {
-        return userRepository.findByName(name) != null;
-    }
-
-
-
 }

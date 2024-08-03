@@ -37,12 +37,12 @@ public class UserController {
             return "users/userregform";
         }
 
-        if (userService.nameExists(user.getName())) {
-            result.rejectValue("name", null, "이미 사용 중인 아이디입니다.");
+        if (userService.existsByName(user.getName())) {
+            result.rejectValue("name", null, "이미 사용 중인 이름(아이디)입니다.");
             return "users/userregform";
         }
 
         userService.registerNewUser(user);
-        return "redirect:/welcome";
+        return "redirect:/loginform";
     }
 }
